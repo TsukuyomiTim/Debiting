@@ -1,9 +1,11 @@
 // ==UserScript==
 // @name         Profile Charge Helper (Plover)
 // @namespace    http://tampermonkey.net/
-// @version      1.4
+// @version      1.5
 // @description  Создание формы Charge с профиля игрока (create/671)
 // @author       Plover
+// @updateURL    https://github.com/TsukuyomiTim/Debiting/raw/refs/heads/main/profile-charge-plover.user.js
+// @downloadURL  https://github.com/TsukuyomiTim/Debiting/raw/refs/heads/main/profile-charge-plover.user.js
 // @match        https://cc.boadmin.org/ru/Users/Summary/*
 // @match        https://gm.boadmin.org/ru/Users/Summary/*
 // @match        https://dy.boadmin.org/ru/Users/Summary/*

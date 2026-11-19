@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Profile Charge Helper (Plover)
 // @namespace    http://tampermonkey.net/
-// @version      1.5
+// @version      1.6
 // @description  Создание формы Charge с профиля игрока (create/671)
 // @author       Plover
 // @updateURL    https://github.com/TsukuyomiTim/Debiting/raw/refs/heads/main/profile-charge-plover.user.js
@@ -13,6 +13,10 @@
 // @match        https://kn.boadmin.org/ru/Users/Summary/*
 // @match        https://kt.boadmin.org/ru/Users/Summary/*
 // @match        https://ak.boadmin.org/ru/Users/Summary/*
+// @match        https://www2.fundist.org/ru/*
+// @match        https://www7.fundist.org/ru/*
+// @match        https://www9.fundist.org/ru/*
+// @match        https://*.fundist.org/ru/Users/Summary/*
 // @match        https://tasks.deltasystem.tech/servicedesk/customer/portal/22/create/671*
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -61,8 +65,46 @@
         }
     }
 
+    function normalizeProjectName(raw) {
+        if (!raw) return null;
+        const t = String(raw).replace(/\s+/g, ' ').trim();
+        const map = {
+            cat: 'Cat', gama: 'Gama', daddy: 'Daddy', mers: 'Mers',
+            r7: 'R7', kent: 'Kent', kometa: 'Kometa', arkada: 'Arkada'
+        };
+        const key = t.toLowerCase();
+        if (map[key]) return map[key];
+        for (const p of Object.keys(PROJECT_VALUES)) {
+            if (key === p.toLowerCase()) return p;
+        }
+        return null;
+    }
+
+    function projectFromCurrentLogin() {
+        const el = document.getElementById('CurrentLogin')
+            || document.querySelector('[id="CurrentLogin"], .text-highlight[data-login]');
+        if (!el) return null;
+
+        const text = (el.textContent || '').replace(/\s+/g, ' ').trim();
+        // "Arkada → Arkada, Timur Plover"
+        let m = text.match(/^([A-Za-z0-9]+)\s*[→\-–—]/);
+        if (m) {
+            const p = normalizeProjectName(m[1]);
+            if (p) return p;
+        }
+
+        const login = el.getAttribute('data-login') || '';
+        // "Arkada_Timur.PloverPayment"
+        m = login.match(/^([A-Za-z0-9]+)/);
+        if (m) {
+            const p = normalizeProjectName(m[1]);
+            if (p) return p;
+        }
+        return null;
+    }
+
     function detectProject() {
-        return HOST_PROJECT[location.hostname] || null;
+        return HOST_PROJECT[location.hostname] || projectFromCurrentLogin() || null;
     }
 
     function detectPlayerId() {
@@ -394,9 +436,11 @@
 
     /* ---------- Boot ---------- */
 
-    if (/\.boadmin\.org$/i.test(location.hostname) && /\/Users\/Summary\//i.test(location.pathname)) {
+    const isProfileHost = /\.boadmin\.org$/i.test(location.hostname) || /\.fundist\.org$/i.test(location.hostname);
+    if (isProfileHost && /\/Users\/Summary\//i.test(location.pathname)) {
         setTimeout(createProfilePanel, 800);
         setTimeout(createProfilePanel, 2000);
+        setTimeout(createProfilePanel, 4000);
     } else if (location.href.includes('/create/671')) {
         startFormFill();
     }
